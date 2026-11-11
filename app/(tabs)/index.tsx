@@ -24,7 +24,7 @@ function Section({
 }
 
 export default function TodayScreen() {
-  const { ready, error, today, markDone, permissionMessage, refresh } = useApp();
+  const { ready, error, today, markDone, permissionMessage, refresh, settings } = useApp();
   const router = useRouter();
 
   if (!ready && !error) return <LoadingState label="Starting Joy…" />;
@@ -39,6 +39,18 @@ export default function TodayScreen() {
         {permissionMessage ? (
           <View style={styles.banner}>
             <Text style={styles.bannerText}>{permissionMessage}</Text>
+          </View>
+        ) : null}
+        {settings?.backupReminderEnabled &&
+        (settings.lastBackupAt == null ||
+          Date.now() - settings.lastBackupAt >= 7 * 24 * 60 * 60 * 1000) ? (
+          <View style={styles.banner}>
+            <Text style={styles.bannerText}>
+              It has been 7+ days since a backup (or never). Export an encrypted copy in Settings.
+            </Text>
+            <Text style={styles.link} onPress={() => router.push('/backup')}>
+              Open backup
+            </Text>
           </View>
         ) : null}
 
@@ -104,4 +116,5 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   bannerText: { color: colors.warning, fontSize: 13 },
+  link: { color: colors.cyan, fontWeight: '700', marginTop: 6 },
 });

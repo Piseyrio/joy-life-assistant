@@ -1,75 +1,51 @@
-# JOY LIFE ASSISTANT — Product Spec (v1.0 Half 1)
+# JOY LIFE ASSISTANT — Product Spec (v1.0)
 
 ## Product
 - **Name:** JOY LIFE ASSISTANT
 - **Version:** 1.0
-- **Platform:** Android APK (development build / release APK)
-- **Test device target:** Realme (ColorOS)
-- **Language:** English
-- **Personality:** Friendly, encouraging, clear
-- **Timezone:** Asia/Phnom_Penh (display); storage uses integer UTC timestamps
+- **Platform:** Android APK (development build / release APK — not Expo Go)
+- **Test device:** Realme (ColorOS)
+- **Language:** English · friendly tone
+- **Timezone:** Asia/Phnom_Penh (display); integer UTC timestamps in SQLite
 - **Users:** Single user, fully local, offline-first
 
 ## Problem
 The user forgets things. Reliable local reminders are the core value.
 
 ## Theme — Dark Modern Blue
-| Token | Hex |
-|-------|-----|
-| Background | `#111923` |
-| Surface | `#192535` |
-| Cards | `#1B293A` |
-| Blue | `#3B9EFF` |
-| Cyan | `#55C7E8` |
-| Text | `#F4F7FB` |
-| Secondary text | `#91A5BC` |
+Background `#111923` · Surface `#192535` · Cards `#1B293A` · Blue `#3B9EFF` · Cyan `#55C7E8` · Text `#F4F7FB` · Secondary `#91A5BC`
 
 ## Architecture constraints
-- LOCAL-ONLY: no backend, no Next.js, no PostgreSQL, no Prisma, no server, no accounts, no internet required at runtime, no analytics, no API keys
-- Stack: React Native, Expo, Expo Router, TypeScript (strict), expo-sqlite, Drizzle ORM + migrations, expo-notifications (local only)
-- Do **not** use Expo Go — use `npx expo run:android` or EAS/local release APK
-- Never run destructive database commands; never delete user data unexpectedly
+LOCAL-ONLY: no backend, no Next.js, no PostgreSQL, no Prisma, no server, no accounts, no analytics, no API keys. Core features work offline.
 
-## Half 1 scope
+Stack: React Native, Expo, Expo Router, TypeScript (strict), expo-sqlite, Drizzle ORM + migrations, expo-notifications (local), expo-secure-store, expo-local-authentication, expo-file-system, expo-sharing, expo-document-picker, `@noble/ciphers` + `@noble/hashes`.
 
-### Navigation
-Five bottom tabs:
-1. **Today** — dashboard (overdue, due today, top 3 priorities, completed today)
-2. **Inbox** — task list CRUD
-3. **Projects** — placeholder “Coming in Half 2”
-4. **Calendar** — placeholder “Coming in Half 2”
-5. **Assistant** — placeholder “Coming in Half 2”
+Never run destructive database commands. Never delete user data unexpectedly.
 
-Global **quick-capture** button: type a task in ~5 seconds → lands in Inbox.
+## Tables
+`projects`, `tasks`, `notes`, `reminders`, `task_activity`, `settings`, `notification_history`
 
-### Tasks
-- Statuses: `TODO`, `IN_PROGRESS`, `DONE`, `CANCELLED`
-- Priorities: `LOW`, `MEDIUM`, `HIGH`, `URGENT`
-- Inbox: list, add, edit, delete (confirm), set priority, due date/time
-- Completion writes `task_activity`
-- Loading / empty / error / confirmation states; accessible contrast; minimal animation
+## Navigation
+Five bottom tabs: **Today**, **Inbox**, **Projects**, **Calendar**, **Assistant**. Global quick-capture. Settings / profile, notification history, backup/restore, battery guide.
 
-### Reminders (local notifications)
-- Main deadline reminder at due time
-- Optional repeats after 30 minutes and 2 hours; **max 3 repeats per task per day**
-- Next-morning reminder when appropriate
-- Quiet hours default **22:00–07:00** (configurable)
-- Reminder frequency configurable in settings
-- Notification actions: Snooze 15m / 30m / 1h / Tomorrow, Done
-- Cancel all notifications when task is `DONE` or `CANCELLED`
-- Evening review daily at **20:00** (configurable, can disable): “Pick tomorrow's top 3”
-- Reconcile scheduled notifications vs SQLite on every app start and after settings changes (no duplicates)
-- Handle: permission denied, app restart, device reboot, timezone
-- Android 12+: `SCHEDULE_EXACT_ALARM` (explain + graceful fallback if denied)
-- Android 13+: `POST_NOTIFICATIONS`
-- Realme/ColorOS battery optimization guide screen + open settings button
-- Notification history screen
+## Features
+1. Tasks: full CRUD. Statuses TODO / IN_PROGRESS / DONE / CANCELLED. Priorities LOW / MEDIUM / HIGH / URGENT. Due date/time. Delete with confirmation.
+2. Inbox: list, add, edit, priority, due date, **move to a project**.
+3. Today: overdue, due today, top 3 priorities, completed today.
+4. Projects: create/edit/**archive** (not delete), tasks per project, progress.
+5. Notes: body + title, optional link to project or task, search.
+6. Calendar: daily and weekly agenda from tasks with due dates.
+7. Task activity history.
+8. Loading / empty / error / confirmation states; accessible contrast; minimal animation.
 
-### Tables (Half 1)
-`projects` (table only, UI later), `tasks`, `reminders`, `task_activity`, `settings`, `notification_history`
+## Reminders
+Local only. Deadline at due time; optional 30m / 2h repeats; **max 3 repeats per task per day**; next-morning when appropriate; quiet hours default 22:00–07:00; snooze 15/30/60/tomorrow + Done; cancel on DONE/CANCELLED; evening review 20:00; reconcile on start and after settings; Android 12 exact alarm + Android 13 POST_NOTIFICATIONS; ColorOS battery guide; notification history.
 
-## Out of scope for Half 1
-Backup/restore, encryption, biometric lock, Projects UI, Notes, Calendar agenda, AI.
+## Backup
+Versioned encrypted file (scrypt → AES-256-GCM). Checksum + counts. Verify before restore. Merge (skip existing IDs) or replace into empty DB. 7-day backup reminder. Never upload.
 
-## Real-device checklist
-See `docs/device-test-checklist.md`.
+## Biometric lock
+Optional, off by default. Device biometric with PIN fallback. Does not block notifications.
+
+## AI
+**Not implemented.** Assistant tab is a placeholder. A TypeScript `AiProvider` interface exists for a future optional plugin. The core app must never depend on AI or internet.

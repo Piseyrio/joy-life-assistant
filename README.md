@@ -1,19 +1,18 @@
-# JOY LIFE ASSISTANT (v1.0 — Half 1)
+# JOY LIFE ASSISTANT (v1.0)
 
-Private, offline-first Android productivity app. Reminder core for people who forget things.
+Private, offline-first Android productivity app. Reliable local reminders for people who forget things.
 
-**Local only.** No backend, accounts, analytics, or internet required at runtime.
-
-## Stack
-React Native · Expo · Expo Router · TypeScript (strict) · expo-sqlite · Drizzle schema · expo-notifications
+**Local only.** No backend, accounts, analytics, AI, or internet at runtime.
 
 ## Docs
 - [Product spec](docs/product-spec.md)
 - [Architecture](docs/architecture.md)
 - [Implementation plan](docs/implementation-plan.md)
 - [Device test checklist](docs/device-test-checklist.md)
+- [Recovery](docs/recovery.md)
+- [Privacy](docs/privacy.md)
 
-## Windows PowerShell setup
+## Windows PowerShell
 
 ```powershell
 $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
@@ -21,35 +20,21 @@ $env:ANDROID_SDK_ROOT = $env:ANDROID_HOME
 $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
 $env:Path = "$env:JAVA_HOME\bin;$env:ANDROID_HOME\platform-tools;$env:Path"
 cd $env:USERPROFILE\Desktop\joy-life-assistant
-npm install   # needs internet
-```
-
-## Run on a USB Android phone (dev build — not Expo Go)
-
-```powershell
-adb devices
-npx expo run:android   # needs internet the first time for native deps
-```
-
-## Tests
-
-```powershell
+npm install                 # internet
 npm test
+adb devices
+npx expo run:android        # internet first native build — not Expo Go
 ```
 
-## Release APK
+### APK (internet)
 
 ```powershell
-npx expo prebuild --platform android --clean   # needs internet
-cd android
-.\gradlew.bat assembleRelease                  # needs internet first Gradle sync
-# Output: android\app\build\outputs\apk\release\app-release.apk
-adb install -r app\build\outputs\apk\release\app-release.apk
+npx eas-cli build -p android --profile preview
 ```
+
+Local Gradle often fails on Windows path limits; prefer EAS or a short project path (`C:\jla`).
 
 The finished APK works fully offline.
 
-## Half 1 features
-Today · Inbox · Quick capture · Task CRUD · Local reminders · Quiet hours · Snooze/Done actions · Evening review · Settings · ColorOS battery guide · Notification history
-
-Projects / Calendar / Assistant tabs are **Coming in Half 2** placeholders.
+## Features
+Today · Inbox · Projects (archive, not delete) · Notes + search · Calendar day/week · Local reminders · Quiet hours · Encrypted backup (scrypt + AES-256-GCM) · Optional biometric lock · ColorOS battery guide · Assistant placeholder (no AI)

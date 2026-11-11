@@ -85,11 +85,13 @@ export function Field({
   onChangeText,
   placeholder,
   multiline,
+  secure,
 }: {
   value: string;
   onChangeText: (t: string) => void;
   placeholder?: string;
   multiline?: boolean;
+  secure?: boolean;
 }) {
   return (
     <TextInput
@@ -98,6 +100,7 @@ export function Field({
       placeholder={placeholder}
       placeholderTextColor={colors.secondary}
       multiline={multiline}
+      secureTextEntry={secure}
       style={[styles.input, multiline && { minHeight: 80, textAlignVertical: 'top' }]}
       accessibilityLabel={placeholder}
     />

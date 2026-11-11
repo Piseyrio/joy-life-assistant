@@ -3,7 +3,7 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   roots: ['<rootDir>/__tests__'],
-  moduleFileExtensions: ['ts', 'tsx', 'js'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'mjs'],
   transform: {
     '^.+\\.tsx?$': [
       'ts-jest',
@@ -17,6 +17,15 @@ module.exports = {
         },
       },
     ],
+    '^.+\\.m?js$': [
+      'babel-jest',
+      {
+        babelrc: false,
+        configFile: false,
+        presets: [['@babel/preset-env', { targets: { node: 'current' } }]],
+      },
+    ],
   },
+  transformIgnorePatterns: ['/node_modules/(?!(@noble)/)'],
   testPathIgnorePatterns: ['/node_modules/'],
 };

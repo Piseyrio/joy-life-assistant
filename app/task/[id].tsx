@@ -13,6 +13,8 @@ import {
   Title,
 } from '../../src/components/ui';
 import { getTask, getTaskActivity } from '../../src/services/taskService';
+import { listProjects } from '../../src/services/projectService';
+import type { Project } from '../../src/db/schema';
 import type { Task } from '../../src/db/schema';
 import { useApp } from '../../src/hooks/AppContext';
 import { colors } from '../../src/theme/colors';
@@ -36,6 +38,8 @@ export default function TaskDetailScreen() {
   const [due, setDue] = useState<Date | null>(null);
   const [showPicker, setShowPicker] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [projectId, setProjectId] = useState<string | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -51,7 +55,9 @@ export default function TaskDetailScreen() {
         setPriority(t.priority as TaskPriority);
         setStatus(t.status as TaskStatus);
         setDue(t.dueAt ? new Date(t.dueAt) : null);
+        setProjectId(t.projectId);
         setActivity(await getTaskActivity(id));
+        setProjects(await listProjects(false));
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Failed to load');
       }
@@ -70,6 +76,7 @@ export default function TaskDetailScreen() {
         priority,
         status,
         dueAt: due ? due.getTime() : null,
+        projectId,
       });
       router.back();
     } catch (e) {
@@ -112,6 +119,19 @@ export default function TaskDetailScreen() {
         <View style={styles.row}>
           {STATUSES.map((s) => (
             <Chip key={s} label={s} active={status === s} onPress={() => setStatus(s)} />
+          ))}
+        </View>
+
+        <Text style={styles.label}>Move to project</Text>
+        <View style={styles.row}>
+          <Chip label="Inbox" active={!projectId} onPress={() => setProjectId(null)} />
+          {projects.map((p) => (
+            <Chip
+              key={p.id}
+              label={p.name}
+              active={projectId === p.id}
+              onPress={() => setProjectId(p.id)}
+            />
           ))}
         </View>
 

@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, gte, inArray, isNotNull, lt, lte, ne, or, sql } from 'drizzle-orm';
 import { getDb } from '../db/client';
-import { reminders, taskActivity, tasks, type Task } from '../db/schema';
+import { notes, reminders, taskActivity, tasks, type Task } from '../db/schema';
 import type { TaskPriority, TaskStatus } from '../types/models';
 import { createId } from '../utils/ids';
 import { endOfTodayUtcMs, nowUtcMs, startOfTodayUtcMs } from '../utils/dates';
@@ -11,6 +11,7 @@ export type CreateTaskInput = {
   priority?: TaskPriority;
   dueAt?: number | null;
   status?: TaskStatus;
+  projectId?: string | null;
 };
 
 export type UpdateTaskInput = {
@@ -19,6 +20,7 @@ export type UpdateTaskInput = {
   priority?: TaskPriority;
   dueAt?: number | null;
   status?: TaskStatus;
+  projectId?: string | null;
 };
 
 async function logActivity(taskId: string, action: string, detail?: string): Promise<void> {
@@ -44,7 +46,7 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
     notes: input.notes?.trim() || null,
     status: input.status ?? 'TODO',
     priority: input.priority ?? 'MEDIUM',
-    projectId: null,
+    projectId: input.projectId ?? null,
     dueAt: input.dueAt ?? null,
     completedAt: null,
     createdAt: now,
@@ -102,6 +104,7 @@ export async function updateTask(id: string, input: UpdateTaskInput): Promise<Ta
   if (input.notes !== undefined) patch.notes = input.notes?.trim() || null;
   if (input.priority !== undefined) patch.priority = input.priority;
   if (input.dueAt !== undefined) patch.dueAt = input.dueAt;
+  if (input.projectId !== undefined) patch.projectId = input.projectId;
   if (input.status !== undefined) {
     patch.status = input.status;
     if (input.status === 'DONE') patch.completedAt = now;
@@ -151,6 +154,7 @@ export async function permanentlyDeleteTask(id: string): Promise<void> {
   const db = getDb();
   await db.transaction(async (tx) => {
     await tx.delete(reminders).where(eq(reminders.taskId, id));
+    await tx.delete(notes).where(eq(notes.taskId, id));
     await tx.delete(taskActivity).where(eq(taskActivity.taskId, id));
     await tx.delete(tasks).where(eq(tasks.id, id));
   });

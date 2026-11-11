@@ -26,6 +26,9 @@ export type AppSettings = {
   nextMorningEnabled: boolean;
   nextMorningTime: string; // HH:mm
   timezone: string;
+  lastBackupAt: number | null;
+  backupReminderEnabled: boolean;
+  lockEnabled: boolean;
 };
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -37,4 +40,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   nextMorningEnabled: true,
   nextMorningTime: '08:00',
   timezone: 'Asia/Phnom_Penh',
+  lastBackupAt: null,
+  backupReminderEnabled: true,
+  lockEnabled: false,
 };

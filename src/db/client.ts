@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS projects (
   id text PRIMARY KEY NOT NULL,
   name text NOT NULL,
   color text,
+  archived_at integer,
   created_at integer NOT NULL,
   updated_at integer NOT NULL
 );
@@ -31,6 +32,18 @@ CREATE TABLE IF NOT EXISTS tasks (
   created_at integer NOT NULL,
   updated_at integer NOT NULL,
   FOREIGN KEY (project_id) REFERENCES projects(id)
+);
+
+CREATE TABLE IF NOT EXISTS notes (
+  id text PRIMARY KEY NOT NULL,
+  title text NOT NULL,
+  body text DEFAULT '' NOT NULL,
+  project_id text,
+  task_id text,
+  created_at integer NOT NULL,
+  updated_at integer NOT NULL,
+  FOREIGN KEY (project_id) REFERENCES projects(id),
+  FOREIGN KEY (task_id) REFERENCES tasks(id)
 );
 
 CREATE TABLE IF NOT EXISTS reminders (
@@ -78,6 +91,10 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
 );
 
 CREATE INDEX IF NOT EXISTS idx_projects_updated ON projects (updated_at);
+CREATE INDEX IF NOT EXISTS idx_projects_archived ON projects (archived_at);
+CREATE INDEX IF NOT EXISTS idx_notes_updated ON notes (updated_at);
+CREATE INDEX IF NOT EXISTS idx_notes_project ON notes (project_id);
+CREATE INDEX IF NOT EXISTS idx_notes_task ON notes (task_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks (status);
 CREATE INDEX IF NOT EXISTS idx_tasks_due_at ON tasks (due_at);
 CREATE INDEX IF NOT EXISTS idx_tasks_priority ON tasks (priority);
@@ -110,6 +127,38 @@ export async function applyMigrations(database: SQLite.SQLiteDatabase): Promise<
     await database.execAsync(INIT_SQL);
     await database.runAsync('INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)', [
       1,
+      Date.now(),
+    ]);
+  }
+
+  const afterV1 = await database.getFirstAsync<{ version: number }>(
+    'SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 1',
+  );
+  const v = afterV1?.version ?? 0;
+  if (v < 2) {
+    const cols = await database.getAllAsync<{ name: string }>('PRAGMA table_info(projects)');
+    if (!cols.some((c) => c.name === 'archived_at')) {
+      await database.execAsync('ALTER TABLE projects ADD COLUMN archived_at integer;');
+    }
+    await database.execAsync(`
+      CREATE TABLE IF NOT EXISTS notes (
+        id text PRIMARY KEY NOT NULL,
+        title text NOT NULL,
+        body text DEFAULT '' NOT NULL,
+        project_id text,
+        task_id text,
+        created_at integer NOT NULL,
+        updated_at integer NOT NULL,
+        FOREIGN KEY (project_id) REFERENCES projects(id),
+        FOREIGN KEY (task_id) REFERENCES tasks(id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_notes_updated ON notes (updated_at);
+      CREATE INDEX IF NOT EXISTS idx_notes_project ON notes (project_id);
+      CREATE INDEX IF NOT EXISTS idx_notes_task ON notes (task_id);
+      CREATE INDEX IF NOT EXISTS idx_projects_archived ON projects (archived_at);
+    `);
+    await database.runAsync('INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)', [
+      2,
       Date.now(),
     ]);
   }

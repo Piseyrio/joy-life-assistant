@@ -11,6 +11,10 @@ describe('migrations', () => {
     db.exec('PRAGMA foreign_keys = ON;');
     db.exec(sql);
 
+    const v2 = fs.readFileSync(path.join(__dirname, '../src/db/migrations/0001_notes_archive.sql'), 'utf8');
+    db.exec('ALTER TABLE projects ADD COLUMN archived_at integer;');
+    db.exec(v2);
+
     const tables = (
       db.prepare(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`).all() as Array<{
         name: string;
@@ -21,6 +25,7 @@ describe('migrations', () => {
       expect.arrayContaining([
         'projects',
         'tasks',
+        'notes',
         'reminders',
         'task_activity',
         'settings',

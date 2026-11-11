@@ -1,74 +1,57 @@
-# Implementation Plan — Half 1
+# Implementation Plan — v1.0 full
 
-## Environment (inspected)
-- Node / npm: required
+## Environment
+- Node / npm
 - JDK: Android Studio JBR (`JAVA_HOME`)
-- Android SDK: `%LOCALAPPDATA%\Android\Sdk` (`ANDROID_HOME`)
-- adb: `%ANDROID_HOME%\platform-tools`
-- Internet needed for: npm install, Expo/Gradle dependency download, GitHub push
+- Android SDK: `%LOCALAPPDATA%\Android\Sdk`
+- adb in `platform-tools`
+- Internet: npm install, Gradle/EAS native build, GitHub push
 - Finished APK: fully offline
 
-## Dependencies
-### Runtime
-- expo, expo-router, react, react-native
-- expo-sqlite, drizzle-orm
-- expo-notifications, expo-device, expo-intent-launcher
-- @react-native-community/datetimepicker
-- date-fns, date-fns-tz, uuid
-- react-native-safe-area-context, react-native-screens, react-native-gesture-handler, react-native-reanimated
+## Runtime dependencies
+expo, expo-router, react, react-native, expo-sqlite, drizzle-orm, expo-notifications, expo-device, expo-intent-launcher, expo-secure-store, expo-local-authentication, expo-file-system, expo-sharing, expo-document-picker, @react-native-community/datetimepicker, date-fns, date-fns-tz, @noble/ciphers, @noble/hashes
 
-### Dev
-- typescript, drizzle-kit, jest, jest-expo, @types/jest, @types/uuid, ts-jest
+## Dev
+typescript, drizzle-kit, jest, ts-jest, better-sqlite3
 
-## PowerShell commands
+## PowerShell
 
-### One-time env (current session)
 ```powershell
 $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 $env:ANDROID_SDK_ROOT = $env:ANDROID_HOME
 $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
 $env:Path = "$env:JAVA_HOME\bin;$env:ANDROID_HOME\platform-tools;$env:Path"
 cd $env:USERPROFILE\Desktop\joy-life-assistant
-```
-
-### Install (needs internet)
-```powershell
-npm install
-```
-
-### Development build on USB phone (needs internet first time for native deps)
-```powershell
-adb devices
-npx expo run:android
-```
-
-### Unit tests
-```powershell
+npm install                 # internet
 npm test
+adb devices
+npx expo run:android        # internet first native build; not Expo Go
 ```
 
-### Release APK (needs internet for Gradle deps first time)
+### Release APK (EAS — internet)
 ```powershell
-npx expo prebuild --platform android --clean
+npx eas-cli build -p android --profile preview
+```
+
+### Local Gradle (may fail on Windows MAX_PATH; use a short path or EAS)
+```powershell
+npx expo prebuild --platform android
 cd android
+$env:GRADLE_USER_HOME = "C:\g"
 .\gradlew.bat assembleRelease
-# APK: android\app\build\outputs\apk\release\app-release.apk
-```
-
-### Install release APK on phone
-```powershell
-adb install -r android\app\build\outputs\apk\release\app-release.apk
 ```
 
 ## Milestones
-1. Setup + docs
-2. Theme + 5 tabs
-3. SQLite + Drizzle + migrations
-4. Inbox + task CRUD + quick capture
-5. Today dashboard
-6. Reminders + reconciliation
-7. Settings + battery guide + evening review
-8. Tests + device checklist
-
-## Half 2 (not built)
-Projects UI, Notes, Calendar agenda, AI Assistant features, backup/restore, encryption, biometric lock.
+1. Setup + docs  
+2. Theme + 5 tabs  
+3. SQLite + Drizzle + migrations  
+4. Inbox + task CRUD  
+5. Today dashboard  
+6. Reminders + reconciliation  
+7. Settings + battery + evening review  
+8. Projects + Notes  
+9. Calendar agenda  
+10. Encrypted backup/restore + 7-day reminder  
+11. Biometric lock  
+12. Assistant placeholder + polish  
+13. Full tests + device checklist  

@@ -12,6 +12,7 @@ import {
 import { useApp } from '../src/hooks/AppContext';
 import { colors } from '../src/theme/colors';
 import type { AppSettings } from '../src/types/models';
+import { getHardware, setLockEnabled } from '../src/services/lockService';
 
 export default function SettingsScreen() {
   const { settings, saveSettings, ready } = useApp();
@@ -84,8 +85,47 @@ export default function SettingsScreen() {
         <Text style={styles.label}>Evening review time (HH:mm)</Text>
         <Field value={draft.eveningReviewTime} onChangeText={(t) => set('eveningReviewTime', t)} />
 
+        <View style={styles.switchRow}>
+          <Text style={styles.switchLabel}>7-day backup reminder</Text>
+          <Switch
+            value={draft.backupReminderEnabled}
+            onValueChange={(v) => set('backupReminderEnabled', v)}
+            trackColor={{ true: colors.blue }}
+          />
+        </View>
+
+        <View style={styles.switchRow}>
+          <Text style={styles.switchLabel}>App lock (biometric / PIN)</Text>
+          <Switch
+            value={draft.lockEnabled}
+            onValueChange={async (v) => {
+              set('lockEnabled', v);
+              try {
+                if (v) {
+                  const hw = await getHardware();
+                  if (!hw.hasHardware && !hw.enrolled) {
+                    Alert.alert(
+                      'Device lock',
+                      'No biometric enrolled. Joy will use the device PIN when you unlock.',
+                    );
+                  }
+                }
+                await setLockEnabled(v);
+              } catch (e) {
+                Alert.alert('Lock setting failed', e instanceof Error ? e.message : 'Error');
+              }
+            }}
+            trackColor={{ true: colors.blue }}
+          />
+        </View>
+        <Text style={styles.hint}>
+          Off by default. Notifications still fire while the UI is locked.
+        </Text>
+
         <View style={{ height: 16 }} />
         <PrimaryButton label={busy ? 'Saving…' : 'Save settings'} onPress={onSave} disabled={busy} />
+        <View style={{ height: 10 }} />
+        <SecondaryButton label="Backup & restore" onPress={() => router.push('/backup')} />
         <View style={{ height: 10 }} />
         <SecondaryButton
           label="Realme / ColorOS battery guide"

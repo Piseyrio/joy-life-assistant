@@ -34,13 +34,21 @@ export default function TabLayout() {
           tabBarActiveTintColor: colors.blue,
           tabBarInactiveTintColor: colors.secondary,
           headerRight: () => (
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => router.push('/settings')}
-              style={{ marginRight: 12 }}
-            >
-              <Text style={{ color: colors.cyan, fontWeight: '700' }}>Settings</Text>
-            </Pressable>
+            <View style={{ flexDirection: 'row', gap: 12, marginRight: 12 }}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Notification history"
+                onPress={() => router.push('/notification-history')}
+              >
+                <Text style={{ color: colors.cyan, fontWeight: '700' }}>Alerts</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => router.push('/settings')}
+              >
+                <Text style={{ color: colors.cyan, fontWeight: '700' }}>Settings</Text>
+              </Pressable>
+            </View>
           ),
         }}
       >

@@ -6,10 +6,11 @@ export const projects = sqliteTable(
     id: text('id').primaryKey(),
     name: text('name').notNull(),
     color: text('color'),
+    archivedAt: integer('archived_at'),
     createdAt: integer('created_at').notNull(),
     updatedAt: integer('updated_at').notNull(),
   },
-  (t) => [index('idx_projects_updated').on(t.updatedAt)],
+  (t) => [index('idx_projects_updated').on(t.updatedAt), index('idx_projects_archived').on(t.archivedAt)],
 );
 
 export const tasks = sqliteTable(
@@ -31,6 +32,24 @@ export const tasks = sqliteTable(
     index('idx_tasks_due_at').on(t.dueAt),
     index('idx_tasks_priority').on(t.priority),
     index('idx_tasks_project').on(t.projectId),
+  ],
+);
+
+export const notes = sqliteTable(
+  'notes',
+  {
+    id: text('id').primaryKey(),
+    title: text('title').notNull(),
+    body: text('body').notNull().default(''),
+    projectId: text('project_id'),
+    taskId: text('task_id'),
+    createdAt: integer('created_at').notNull(),
+    updatedAt: integer('updated_at').notNull(),
+  },
+  (t) => [
+    index('idx_notes_updated').on(t.updatedAt),
+    index('idx_notes_project').on(t.projectId),
+    index('idx_notes_task').on(t.taskId),
   ],
 );
 
@@ -96,6 +115,7 @@ export const notificationHistory = sqliteTable(
 
 export type Project = typeof projects.$inferSelect;
 export type Task = typeof tasks.$inferSelect;
+export type Note = typeof notes.$inferSelect;
 export type Reminder = typeof reminders.$inferSelect;
 export type TaskActivity = typeof taskActivity.$inferSelect;
 export type SettingRow = typeof settings.$inferSelect;

@@ -41,8 +41,8 @@
     "uuid": "^14.0.3"
   },
   "devDependencies": {
-    "@babel/core": "^8.1.0",
-    "@babel/preset-env": "^8.0.7",
+    "@babel/core": "^7.28.5",
+    "@babel/preset-env": "^7.28.5",
     "@types/better-sqlite3": "^9.6.0",
     "@types/jest": "^30.0.0",
     "@types/react": "~19.3.0",

@@ -5,6 +5,7 @@ import { EmptyState, ErrorState, LoadingState, Muted, Screen, Subtitle, Title } 
 import { TaskRow } from '../../src/components/TaskRow';
 import { useApp } from '../../src/hooks/AppContext';
 import { colors } from '../../src/theme/colors';
+import { needsBackupReminder } from '../../src/utils/restorePlan';
 
 function Section({
   title,
@@ -41,9 +42,7 @@ export default function TodayScreen() {
             <Text style={styles.bannerText}>{permissionMessage}</Text>
           </View>
         ) : null}
-        {settings?.backupReminderEnabled &&
-        (settings.lastBackupAt == null ||
-          Date.now() - settings.lastBackupAt >= 7 * 24 * 60 * 60 * 1000) ? (
+        {settings?.backupReminderEnabled && needsBackupReminder(settings.lastBackupAt) ? (
           <View style={styles.banner}>
             <Text style={styles.bannerText}>
               It has been 7+ days since a backup (or never). Export an encrypted copy in Settings.

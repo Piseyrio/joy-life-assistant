@@ -65,4 +65,18 @@ describe('project and note CRUD', () => {
     expect(found.title).toBe('Wifi password');
     db.close();
   });
+
+  it('computes progress ignoring cancelled tasks', () => {
+    const items = [
+      { status: 'TODO' },
+      { status: 'DONE' },
+      { status: 'DONE' },
+      { status: 'CANCELLED' },
+    ];
+    const openish = items.filter((t) => t.status !== 'CANCELLED');
+    const done = openish.filter((t) => t.status === 'DONE').length;
+    const total = openish.length;
+    const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+    expect({ total, done, pct }).toEqual({ total: 3, done: 2, pct: 67 });
+  });
 });

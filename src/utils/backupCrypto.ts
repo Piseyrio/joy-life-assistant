@@ -134,7 +134,7 @@ export function validatePayload(payload: BackupPayload): void {
   if (!payload.tables) {
     throw new Error('Backup is missing table data');
   }
-  const required: Array<keyof BackupPayload['tables']> = [
+  const required: (keyof BackupPayload['tables'])[] = [
     'projects',
     'tasks',
     'notes',

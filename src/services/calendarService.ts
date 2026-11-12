@@ -3,7 +3,7 @@ import { addDays, startOfDay, endOfDay } from 'date-fns';
 import { fromZonedTime } from 'date-fns-tz';
 import { getDb } from '../db/client';
 import { tasks, type Task } from '../db/schema';
-import { APP_TIMEZONE, getLocalDateKey, toPhnomPenh } from '../utils/dates';
+import { APP_TIMEZONE, formatInPhnomPenh, getLocalDateKey, toPhnomPenh } from '../utils/dates';
 
 function startOfLocalDayUtc(utcMs: number): number {
   const local = toPhnomPenh(utcMs);
@@ -38,7 +38,7 @@ export async function getDayAgenda(utcMs = Date.now()): Promise<AgendaDay> {
   const sorted = rows.sort((a, b) => (a.dueAt ?? 0) - (b.dueAt ?? 0));
   return {
     dateKey: getLocalDateKey(utcMs),
-    label: getLocalDateKey(utcMs),
+    label: formatInPhnomPenh(utcMs, 'EEEE, MMM d'),
     tasks: sorted,
   };
 }

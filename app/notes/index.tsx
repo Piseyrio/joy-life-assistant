@@ -19,14 +19,14 @@ export default function NotesScreen() {
   const [rows, setRows] = useState<Note[]>([]);
   const [title, setTitle] = useState('');
 
-  const load = useCallback(async (q = query) => {
+  const load = useCallback(async (q: string) => {
     setRows(await searchNotes(q));
-  }, [query]);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      void load('');
-    }, []),
+      void load(query);
+    }, [load, query]),
   );
 
   return (

@@ -26,7 +26,8 @@ export async function setupNotificationInfrastructure(): Promise<void> {
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
       name: 'Joy Reminders',
-      importance: Notifications.AndroidImportance.MAX,
+      // 5 === AndroidImportance.MAX (avoid fragile namespace re-export typing)
+      importance: 5,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: '#3B9EFF',
       bypassDnd: false,

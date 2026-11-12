@@ -63,6 +63,36 @@ describe('task CRUD', () => {
     db.close();
   });
 
+  it('treats only unassigned open tasks as Inbox', () => {
+    const db = openDb();
+    const now = Date.now();
+    const inboxId = randomUUID();
+    const projectId = randomUUID();
+    const assignedId = randomUUID();
+
+    db.prepare(
+      `INSERT INTO projects (id, name, color, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`,
+    ).run(projectId, 'Home', '#3B9EFF', now, now);
+
+    db.prepare(
+      `INSERT INTO tasks (id, title, notes, status, priority, project_id, due_at, completed_at, created_at, updated_at)
+       VALUES (?, ?, NULL, 'TODO', 'MEDIUM', NULL, NULL, NULL, ?, ?)`,
+    ).run(inboxId, 'Loose thought', now, now);
+
+    db.prepare(
+      `INSERT INTO tasks (id, title, notes, status, priority, project_id, due_at, completed_at, created_at, updated_at)
+       VALUES (?, ?, NULL, 'TODO', 'MEDIUM', ?, NULL, NULL, ?, ?)`,
+    ).run(assignedId, 'Project chore', projectId, now, now);
+
+    const inbox = db
+      .prepare(
+        `SELECT id FROM tasks WHERE status NOT IN ('DONE','CANCELLED') AND project_id IS NULL`,
+      )
+      .all() as { id: string }[];
+    expect(inbox.map((r) => r.id)).toEqual([inboxId]);
+    db.close();
+  });
+
   it('enforces foreign keys for reminders', () => {
     const db = openDb();
     expect(() => {

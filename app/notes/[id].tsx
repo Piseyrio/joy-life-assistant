@@ -13,7 +13,7 @@ import {
 } from '../../src/components/ui';
 import { deleteNote, getNote, updateNote } from '../../src/services/noteService';
 import { listProjects } from '../../src/services/projectService';
-import { listInboxTasks } from '../../src/services/taskService';
+import { listAllActiveTasks } from '../../src/services/taskService';
 import type { Note, Project, Task } from '../../src/db/schema';
 import { colors } from '../../src/theme/colors';
 
@@ -28,6 +28,7 @@ export default function NoteEditorScreen() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [taskOptions, setTaskOptions] = useState<Task[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -42,7 +43,7 @@ export default function NoteEditorScreen() {
       setProjectId(n.projectId);
       setTaskId(n.taskId);
       setProjects(await listProjects(false));
-      setTaskOptions(await listInboxTasks());
+      setTaskOptions(await listAllActiveTasks());
     })();
   }, [id]);
 
@@ -84,10 +85,22 @@ export default function NoteEditorScreen() {
         </View>
 
         <PrimaryButton
-          label="Save"
+          label={busy ? 'Saving…' : 'Save'}
+          disabled={busy}
           onPress={async () => {
-            await updateNote(id, { title, body, projectId, taskId });
-            router.back();
+            if (!title.trim()) {
+              Alert.alert('Title required', 'Give this note a short title.');
+              return;
+            }
+            setBusy(true);
+            try {
+              await updateNote(id, { title, body, projectId, taskId });
+              router.back();
+            } catch (e) {
+              Alert.alert('Could not save', e instanceof Error ? e.message : 'Error');
+            } finally {
+              setBusy(false);
+            }
           }}
         />
         <View style={{ height: 10 }} />

@@ -29,7 +29,16 @@ export default function BackupScreen() {
   const last = settings?.lastBackupAt ?? null;
   const age = daysSinceBackup(last);
 
+  function requirePassword(): boolean {
+    if (!password || password.length < 4) {
+      Alert.alert('Password required', 'Use at least 4 characters. Joy cannot recover a forgotten password.');
+      return false;
+    }
+    return true;
+  }
+
   async function onExport() {
+    if (!requirePassword()) return;
     setBusy(true);
     try {
       await shareBackup(password);
@@ -43,6 +52,7 @@ export default function BackupScreen() {
   }
 
   async function onPick() {
+    if (!requirePassword()) return;
     setBusy(true);
     try {
       const file = await pickBackupFile();
@@ -51,6 +61,8 @@ export default function BackupScreen() {
       setPreview(p);
     } catch (e) {
       Alert.alert('Could not open backup', e instanceof Error ? e.message : 'Error');
+      setPreview(null);
+      setUri(null);
     } finally {
       setBusy(false);
     }
@@ -58,11 +70,17 @@ export default function BackupScreen() {
 
   async function runRestore(mode: 'merge' | 'replace_empty') {
     if (!uri) return;
+    if (!requirePassword()) return;
     setBusy(true);
     try {
       const result = await restoreBackup(uri, password, mode);
       await refresh();
-      Alert.alert('Restore complete', `Inserted ${result.inserted}, skipped ${result.skipped} existing IDs.`);
+      Alert.alert(
+        'Restore complete',
+        `Inserted ${result.inserted}, skipped ${result.skipped} existing IDs.`,
+      );
+      setPreview(null);
+      setUri(null);
     } catch (e) {
       Alert.alert('Restore rejected', e instanceof Error ? e.message : 'Error');
     } finally {
@@ -84,10 +102,14 @@ export default function BackupScreen() {
         </Text>
 
         <Text style={styles.label}>Password</Text>
-        <Field value={password} onChangeText={setPassword} placeholder="Backup password" secure />
+        <Field value={password} onChangeText={setPassword} placeholder="Backup password (min 4)" secure />
 
         <View style={{ height: 12 }} />
-        <PrimaryButton label={busy ? 'Working…' : 'Export encrypted backup'} onPress={onExport} disabled={busy} />
+        <PrimaryButton
+          label={busy ? 'Working…' : 'Export encrypted backup'}
+          onPress={onExport}
+          disabled={busy}
+        />
         <View style={{ height: 10 }} />
         <SecondaryButton label="Choose backup file to restore" onPress={onPick} />
 
@@ -99,7 +121,11 @@ export default function BackupScreen() {
             <Text style={styles.meta}>Incoming: {JSON.stringify(preview.counts)}</Text>
             <Text style={styles.meta}>On this phone: {JSON.stringify(preview.existingCounts)}</Text>
             <Text style={styles.hint}>Existing IDs are never overwritten.</Text>
-            <PrimaryButton label="Merge (skip existing IDs)" onPress={() => runRestore('merge')} disabled={busy} />
+            <PrimaryButton
+              label="Merge (skip existing IDs)"
+              onPress={() => runRestore('merge')}
+              disabled={busy}
+            />
             <View style={{ height: 8 }} />
             <SecondaryButton
               label="Replace into empty database"

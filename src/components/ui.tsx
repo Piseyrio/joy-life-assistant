@@ -135,16 +135,6 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
   );
 }
 
-export function ComingSoon({ feature }: { feature: string }) {
-  return (
-    <Screen style={styles.center}>
-      <Title>{feature}</Title>
-      <Subtitle>Coming in Half 2</Subtitle>
-      <Muted>This section is prepared but not built yet. Inbox and Today reminders are ready.</Muted>
-    </Screen>
-  );
-}
-
 export function Chip({
   label,
   active,

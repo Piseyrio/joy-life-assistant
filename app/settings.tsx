@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import {
   Field,
@@ -12,29 +12,27 @@ import {
 import { useApp } from '../src/hooks/AppContext';
 import { colors } from '../src/theme/colors';
 import type { AppSettings } from '../src/types/models';
-import { getHardware, setLockEnabled } from '../src/services/lockService';
+import { authenticateUnlock, getHardware, setLockEnabled } from '../src/services/lockService';
 
 export default function SettingsScreen() {
   const { settings, saveSettings, ready } = useApp();
   const router = useRouter();
-  const [draft, setDraft] = useState<AppSettings | null>(null);
+  const [overrides, setOverrides] = useState<Partial<AppSettings>>({});
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    if (settings) setDraft(settings);
-  }, [settings]);
+  const draft = settings ? { ...settings, ...overrides } : null;
 
   if (!ready || !draft) return <LoadingState />;
 
   function set<K extends keyof AppSettings>(key: K, value: AppSettings[K]) {
-    setDraft((d) => (d ? { ...d, [key]: value } : d));
+    setOverrides((o) => ({ ...o, [key]: value }));
   }
 
   async function onSave() {
-    if (!draft) return;
     setBusy(true);
     try {
-      await saveSettings(draft);
+      await saveSettings(overrides);
+      setOverrides({});
       Alert.alert('Saved', 'Settings updated and reminders reconciled.');
     } catch (e) {
       Alert.alert('Error', e instanceof Error ? e.message : 'Could not save');
@@ -99,7 +97,6 @@ export default function SettingsScreen() {
           <Switch
             value={draft.lockEnabled}
             onValueChange={async (v) => {
-              set('lockEnabled', v);
               try {
                 if (v) {
                   const hw = await getHardware();
@@ -109,7 +106,13 @@ export default function SettingsScreen() {
                       'No biometric enrolled. Joy will use the device PIN when you unlock.',
                     );
                   }
+                  const ok = await authenticateUnlock();
+                  if (!ok) {
+                    Alert.alert('Lock not enabled', 'Authenticate to turn on app lock.');
+                    return;
+                  }
                 }
+                set('lockEnabled', v);
                 await setLockEnabled(v);
               } catch (e) {
                 Alert.alert('Lock setting failed', e instanceof Error ? e.message : 'Error');

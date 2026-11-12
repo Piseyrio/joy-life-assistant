@@ -3,7 +3,7 @@
  */
 
 export function findOrphanOsIds(
-  pendingNotificationIds: Array<string | null | undefined>,
+  pendingNotificationIds: (string | null | undefined)[],
   osIds: string[],
 ): string[] {
   const known = new Set(pendingNotificationIds.filter((id): id is string => Boolean(id)));

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, inArray, isNotNull, lt, lte, ne, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lt, lte, ne, or, sql } from 'drizzle-orm';
 import { getDb } from '../db/client';
 import { notes, reminders, taskActivity, tasks, type Task } from '../db/schema';
 import type { TaskPriority, TaskStatus } from '../types/models';
@@ -22,17 +22,6 @@ export type UpdateTaskInput = {
   status?: TaskStatus;
   projectId?: string | null;
 };
-
-async function logActivity(taskId: string, action: string, detail?: string): Promise<void> {
-  const db = getDb();
-  await db.insert(taskActivity).values({
-    id: createId(),
-    taskId,
-    action,
-    detail: detail ?? null,
-    createdAt: nowUtcMs(),
-  });
-}
 
 export async function createTask(input: CreateTaskInput): Promise<Task> {
   const db = getDb();
@@ -77,17 +66,26 @@ export async function getTask(id: string): Promise<Task | null> {
   return rows[0] ?? null;
 }
 
+/** Open tasks not assigned to a project (true Inbox). */
 export async function listInboxTasks(): Promise<Task[]> {
+  const db = getDb();
+  return db
+    .select()
+    .from(tasks)
+    .where(
+      and(ne(tasks.status, 'DONE'), ne(tasks.status, 'CANCELLED'), isNull(tasks.projectId)),
+    )
+    .orderBy(desc(tasks.updatedAt));
+}
+
+/** All open tasks (Inbox + in projects) — for note linking, pickers, etc. */
+export async function listAllActiveTasks(): Promise<Task[]> {
   const db = getDb();
   return db
     .select()
     .from(tasks)
     .where(and(ne(tasks.status, 'DONE'), ne(tasks.status, 'CANCELLED')))
     .orderBy(desc(tasks.updatedAt));
-}
-
-export async function listAllActiveTasks(): Promise<Task[]> {
-  return listInboxTasks();
 }
 
 export async function updateTask(id: string, input: UpdateTaskInput): Promise<Task> {

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
 import { authenticateUnlock, isLockEnabled } from '../services/lockService';
@@ -7,34 +7,51 @@ import { PrimaryButton, Muted } from './ui';
 export function LockGate({ children }: { children: React.ReactNode }) {
   const [locked, setLocked] = useState(false);
   const [checking, setChecking] = useState(true);
+  const prompting = useRef(false);
 
-  const arm = useCallback(async () => {
+  const unlock = useCallback(async () => {
+    if (prompting.current) return;
+    prompting.current = true;
     try {
-      const on = await isLockEnabled();
-      setLocked(on);
-    } catch {
-      setLocked(false);
+      const ok = await authenticateUnlock();
+      if (ok) setLocked(false);
     } finally {
-      setChecking(false);
+      prompting.current = false;
     }
   }, []);
 
   useEffect(() => {
-    void arm();
+    let cancelled = false;
+    // Async SecureStore / settings lookup on mount and AppState changes.
+    void (async () => {
+      try {
+        const on = await isLockEnabled();
+        if (!cancelled) setLocked(on);
+      } catch {
+        if (!cancelled) setLocked(false);
+      } finally {
+        if (!cancelled) setChecking(false);
+      }
+    })();
+
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'background' || state === 'inactive') {
         void isLockEnabled().then((on) => {
-          if (on) setLocked(true);
+          if (!cancelled && on) setLocked(true);
         });
       }
     });
-    return () => sub.remove();
-  }, [arm]);
+    return () => {
+      cancelled = true;
+      sub.remove();
+    };
+  }, []);
 
-  async function unlock() {
-    const ok = await authenticateUnlock();
-    if (ok) setLocked(false);
-  }
+  useEffect(() => {
+    if (!checking && locked) {
+      void unlock();
+    }
+  }, [checking, locked, unlock]);
 
   if (checking) {
     return <View style={styles.fill} />;
@@ -58,7 +75,7 @@ export function LockGate({ children }: { children: React.ReactNode }) {
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',

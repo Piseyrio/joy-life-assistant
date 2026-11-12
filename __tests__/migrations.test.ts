@@ -16,9 +16,9 @@ describe('migrations', () => {
     db.exec(v2);
 
     const tables = (
-      db.prepare(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`).all() as Array<{
+      db.prepare(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`).all() as {
         name: string;
-      }>
+      }[]
     ).map((r) => r.name);
 
     expect(tables).toEqual(
@@ -38,7 +38,7 @@ describe('migrations', () => {
 
     // indexes exist
     const indexes = (
-      db.prepare(`SELECT name FROM sqlite_master WHERE type='index'`).all() as Array<{ name: string }>
+      db.prepare(`SELECT name FROM sqlite_master WHERE type='index'`).all() as { name: string }[]
     ).map((r) => r.name);
     expect(indexes).toEqual(expect.arrayContaining(['idx_tasks_due_at', 'idx_reminders_task']));
 

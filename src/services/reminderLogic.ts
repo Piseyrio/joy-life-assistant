@@ -47,7 +47,7 @@ export function planTaskReminders(params: {
   let repeatsUsed = params.existingRepeatCountForDay ?? 0;
 
   if (settings.reminderRepeatsEnabled && deadlineFire > now) {
-    const candidates: Array<{ kind: PlannedReminder['kind']; at: number }> = [
+    const candidates: { kind: PlannedReminder['kind']; at: number }[] = [
       { kind: 'REPEAT_30M', at: addMinutesUtc(dueAt, 30) },
       { kind: 'REPEAT_2H', at: addHoursUtc(dueAt, 2) },
     ];

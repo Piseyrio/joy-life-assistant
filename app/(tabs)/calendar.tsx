@@ -4,17 +4,15 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { EmptyState, LoadingState, Screen, Title } from '../../src/components/ui';
 import { TaskRow } from '../../src/components/TaskRow';
 import { getDayAgenda, getWeekAgenda, type AgendaDay } from '../../src/services/calendarService';
-import { completeTask } from '../../src/services/taskService';
-import { cancelTaskReminders } from '../../src/services/reminderService';
 import { colors } from '../../src/theme/colors';
-import { addDaysUtc, formatInPhnomPenh } from '../../src/utils/dates';
+import { addDaysUtc, formatInPhnomPenh, nowUtcMs } from '../../src/utils/dates';
 import { useApp } from '../../src/hooks/AppContext';
 
 export default function CalendarScreen() {
   const router = useRouter();
-  const { refresh, markDone } = useApp();
+  const { markDone } = useApp();
   const [mode, setMode] = useState<'day' | 'week'>('day');
-  const [anchor, setAnchor] = useState(Date.now());
+  const [anchor, setAnchor] = useState(nowUtcMs());
   const [days, setDays] = useState<AgendaDay[] | null>(null);
 
   const load = useCallback(async () => {
@@ -37,26 +35,47 @@ export default function CalendarScreen() {
     <Screen>
       <Title>Calendar</Title>
       <View style={styles.switchRow}>
-        <Pressable onPress={() => setMode('day')} style={[styles.seg, mode === 'day' && styles.segOn]}>
+        <Pressable
+          onPress={() => setMode('day')}
+          style={[styles.seg, mode === 'day' && styles.segOn]}
+          accessibilityRole="button"
+          accessibilityState={{ selected: mode === 'day' }}
+        >
           <Text style={styles.segText}>Day</Text>
         </Pressable>
-        <Pressable onPress={() => setMode('week')} style={[styles.seg, mode === 'week' && styles.segOn]}>
+        <Pressable
+          onPress={() => setMode('week')}
+          style={[styles.seg, mode === 'week' && styles.segOn]}
+          accessibilityRole="button"
+          accessibilityState={{ selected: mode === 'week' }}
+        >
           <Text style={styles.segText}>Week</Text>
         </Pressable>
       </View>
       <View style={styles.nav}>
-        <Pressable onPress={() => setAnchor((a) => addDaysUtc(a, mode === 'week' ? -7 : -1))}>
+        <Pressable
+          onPress={() => setAnchor((a) => addDaysUtc(a, mode === 'week' ? -7 : -1))}
+          accessibilityRole="button"
+          accessibilityLabel="Previous"
+        >
           <Text style={styles.navText}>← Prev</Text>
         </Pressable>
-        <Text style={styles.navCenter}>{formatInPhnomPenh(anchor, 'EEE, MMM d')}</Text>
-        <Pressable onPress={() => setAnchor((a) => addDaysUtc(a, mode === 'week' ? 7 : 1))}>
+        <Pressable onPress={() => setAnchor(nowUtcMs())} accessibilityRole="button">
+          <Text style={styles.navCenter}>{formatInPhnomPenh(anchor, 'EEE, MMM d')}</Text>
+          <Text style={styles.todayHint}>Tap for today</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => setAnchor((a) => addDaysUtc(a, mode === 'week' ? 7 : 1))}
+          accessibilityRole="button"
+          accessibilityLabel="Next"
+        >
           <Text style={styles.navText}>Next →</Text>
         </Pressable>
       </View>
       <ScrollView contentContainerStyle={{ paddingBottom: 140 }}>
         {days.map((d) => (
           <View key={d.dateKey} style={styles.day}>
-            <Text style={styles.dayTitle}>{d.dateKey}</Text>
+            <Text style={styles.dayTitle}>{d.label}</Text>
             {d.tasks.length === 0 ? (
               <EmptyState title="Free" body="No due tasks this day." />
             ) : (
@@ -66,12 +85,7 @@ export default function CalendarScreen() {
                   task={t}
                   onPress={() => router.push(`/task/${t.id}`)}
                   onToggleDone={async () => {
-                    if (markDone) await markDone(t.id);
-                    else {
-                      await completeTask(t.id);
-                      await cancelTaskReminders(t.id);
-                      await refresh();
-                    }
+                    await markDone(t.id);
                     await load();
                   }}
                 />
@@ -104,7 +118,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   navText: { color: colors.cyan, fontWeight: '700' },
-  navCenter: { color: colors.text, fontWeight: '600' },
+  navCenter: { color: colors.text, fontWeight: '600', textAlign: 'center' },
+  todayHint: { color: colors.secondary, fontSize: 11, textAlign: 'center', marginTop: 2 },
   day: { marginTop: 8 },
   dayTitle: { color: colors.cyan, fontWeight: '700', marginBottom: 6 },
 });

@@ -42,16 +42,16 @@ $env:GRADLE_USER_HOME = "C:\g"
 ```
 
 ## Milestones
-1. Setup + docs  
-2. Theme + 5 tabs  
-3. SQLite + Drizzle + migrations  
-4. Inbox + task CRUD  
-5. Today dashboard  
-6. Reminders + reconciliation  
-7. Settings + battery + evening review  
-8. Projects + Notes  
-9. Calendar agenda  
-10. Encrypted backup/restore + 7-day reminder  
-11. Biometric lock  
-12. Assistant placeholder + polish  
-13. Full tests + device checklist  
+1. Setup + docs — done  
+2. Theme + 5 tabs — done  
+3. SQLite + Drizzle + migrations — done  
+4. Inbox + task CRUD — done  
+5. Today dashboard — done  
+6. Reminders + reconciliation — done  
+7. Settings + battery + evening review — done  
+8. Projects + Notes — done  
+9. Calendar agenda — done  
+10. Encrypted backup/restore + 7-day reminder — done  
+11. Biometric lock — done  
+12. Assistant placeholder + polish — done  
+13. Full tests + device checklist — done (device boxes still for Realme)  

@@ -14,8 +14,7 @@ import {
 } from '../../src/components/ui';
 import { getTask, getTaskActivity } from '../../src/services/taskService';
 import { listProjects } from '../../src/services/projectService';
-import type { Project } from '../../src/db/schema';
-import type { Task } from '../../src/db/schema';
+import type { Project, Task } from '../../src/db/schema';
 import { useApp } from '../../src/hooks/AppContext';
 import { colors } from '../../src/theme/colors';
 import type { TaskPriority, TaskStatus } from '../../src/types/models';
